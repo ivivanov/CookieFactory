@@ -1,21 +1,38 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 
 namespace BM.Experiments
 {
     public class MotorModule
     {
-        private AutoResetEvent motorPulseEvent;
         private ManualResetEventSlim ovenIsReadyEvent;
+        private CountdownEvent rotationsCountdown;
+        private Thread motorThread;
 
-        public MotorModule(ManualResetEventSlim ovenIsReadyEvent, AutoResetEvent motorPulseEvent)
+        public MotorModule(ManualResetEventSlim ovenIsReadyEvent, CountdownEvent rotationsCountdown)
         {
-            this.motorPulseEvent = motorPulseEvent;
             this.ovenIsReadyEvent = ovenIsReadyEvent;
+            this.rotationsCountdown = rotationsCountdown;
+
+            motorThread = new Thread(() =>
+            {
+                try { StartMotor(); }
+                catch (OperationCanceledException)
+                {
+                }
+            });
+            motorThread.Name = nameof(motorThread);
+
         }
 
         public void Start()
         {
-            StartMotor();
+            motorThread.Start();
+        }
+
+        public void Stop()
+        {
+
         }
 
         private void StartMotor()
@@ -25,11 +42,11 @@ namespace BM.Experiments
 
             while (true)
             {
-                motorPulseEvent.Set();
-                Thread.CurrentThread.PrintMessage("Pulse...");
-
                 Thread.Sleep(1000); //simulate 1 full rotation of the motor gear
+                Thread.CurrentThread.PrintMessage("Pulse...");
+                rotationsCountdown.Signal();
             }
         }
     }
 }
+

@@ -6,14 +6,11 @@ namespace BM.Experiments
 
     public class MachineController
     {
+        private const int RotationsPerBiscuit = 2;//total 4 rotations (2 extruder + 2 stamper)
         private ManualResetEventSlim ovenIsReadyEvent;
-        private AutoResetEvent motorPulseEvent;
+        private CountdownEvent rotationsCountdown;
 
         private CancellationTokenSource cancelSource;
-
-        private Thread motorThread;
-        private Thread biscuitMakerThread;
-        private Thread ovenThread;
 
         private OvenModule ovenModule;
         private BiscuitMakerModule biscuitMakerModule;
@@ -22,44 +19,17 @@ namespace BM.Experiments
         public MachineController()
         {
             ovenIsReadyEvent = new ManualResetEventSlim(false);
-            motorPulseEvent = new AutoResetEvent(false);
+            rotationsCountdown = new CountdownEvent(RotationsPerBiscuit);
             cancelSource = new CancellationTokenSource();
 
             this.ovenModule = new OvenModule(ovenIsReadyEvent);
-            this.biscuitMakerModule = new BiscuitMakerModule(motorPulseEvent);
-            this.motorModule = new MotorModule(ovenIsReadyEvent, motorPulseEvent);
+            this.biscuitMakerModule = new BiscuitMakerModule(rotationsCountdown);
+            this.motorModule = new MotorModule(ovenIsReadyEvent, rotationsCountdown);
         }
 
         public MachineController Init()
         {
             Thread.CurrentThread.Name = nameof(MachineController);
-
-            motorThread = new Thread(() =>
-            {
-                try { motorModule.Start(); }
-                catch (OperationCanceledException)
-                {
-                }
-            });
-            motorThread.Name = nameof(motorThread);
-
-            biscuitMakerThread = new Thread(() =>
-            {
-                try { biscuitMakerModule.Start(); }
-                catch (OperationCanceledException)
-                {
-                }
-            });
-            biscuitMakerThread.Name = nameof(biscuitMakerThread);
-
-            ovenThread = new Thread(() =>
-            {
-                try { ovenModule.Start(); }
-                catch (OperationCanceledException)
-                {
-                }
-            });
-            ovenThread.Name = nameof(ovenThread);
 
             return this;
         }
@@ -73,14 +43,17 @@ namespace BM.Experiments
         public void Stop()
         {
             //can stop only if started
+            ovenIsReadyEvent.WaitHandle.Close();
+
         }
 
         public void Start()
         {
             Thread.CurrentThread.PrintMessage("Start");
-            ovenThread.Start();
-            biscuitMakerThread.Start();
-            motorThread.Start();
+
+            ovenModule.Start();
+            motorModule.Start();
+            biscuitMakerModule.Start();
         }
     }
 }

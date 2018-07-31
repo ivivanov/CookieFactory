@@ -12,12 +12,13 @@ namespace BM.Experiments
         private ManualResetEventSlim reachMaxTempEvent;
         private ManualResetEventSlim reachMinTempEvent;
 
+        private Thread ovenThread;
         private Thread heatingThread;
         private Thread thermometerThread;
 
         private ManualResetEventSlim ovenIsReadyEvent;
 
-        private int temperature = 200;
+        private int temperature;
         private bool isOvenReady;
 
         public OvenModule(ManualResetEventSlim ovenIsReadyEvent)
@@ -27,6 +28,15 @@ namespace BM.Experiments
             this.cancellation = new CancellationTokenSource();
             this.reachMaxTempEvent = new ManualResetEventSlim(false);
             this.reachMinTempEvent = new ManualResetEventSlim(true);
+
+            ovenThread = new Thread(() =>
+            {
+                try { StartModules(); }
+                catch (OperationCanceledException)
+                {
+                }
+            });
+            ovenThread.Name = nameof(ovenThread);
 
             heatingThread = new Thread(() =>
             {
@@ -48,6 +58,11 @@ namespace BM.Experiments
         }
 
         public void Start()
+        {
+            ovenThread.Start();
+        }
+
+        public void StartModules()
         {
             Thread.CurrentThread.PrintMessage("Start");
             heatingThread.Start();
@@ -78,10 +93,10 @@ namespace BM.Experiments
 
             while (true)
             {
-                //Thread.CurrentThread.PrintMessage("Heating...");
+                Thread.CurrentThread.PrintMessage("Heating...");
                 reachMaxTempEvent.Reset();
                 reachMaxTempEvent.Wait();
-                //Thread.CurrentThread.PrintMessage("Cooling...");
+                Thread.CurrentThread.PrintMessage("Cooling...");
                 reachMinTempEvent.Reset();
                 reachMinTempEvent.Wait();
             }
@@ -95,7 +110,7 @@ namespace BM.Experiments
 
             while (true)
             {
-                //Thread.CurrentThread.PrintMessage(temperature);
+                Thread.CurrentThread.PrintMessage(temperature);
                 if (temperature >= MaxTemperature)
                 {
                     reachMinTempEvent.Reset();

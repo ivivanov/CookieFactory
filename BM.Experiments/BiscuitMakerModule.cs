@@ -1,19 +1,30 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 
 namespace BM.Experiments
 {
     public class BiscuitMakerModule
     {
-        private AutoResetEvent motorPulseEvent;
+        private CountdownEvent rotationsCountdown;
+        private Thread biscuitMakerThread;
 
-        public BiscuitMakerModule(AutoResetEvent motorPulseEvent)
+        public BiscuitMakerModule(CountdownEvent rotationsCountdown)
         {
-            this.motorPulseEvent = motorPulseEvent;
+            this.rotationsCountdown = rotationsCountdown;
+
+            biscuitMakerThread = new Thread(() =>
+            {
+                try { BiscuitMaker(); }
+                catch (OperationCanceledException)
+                {
+                }
+            });
+            biscuitMakerThread.Name = nameof(biscuitMakerThread);
         }
 
         public void Start()
         {
-            BiscuitMaker();
+            biscuitMakerThread.Start();
         }
 
         private void BiscuitMaker()
@@ -22,15 +33,12 @@ namespace BM.Experiments
 
             while (true)
             {
-                motorPulseEvent.WaitOne();
+                rotationsCountdown.Wait();
+                rotationsCountdown.Reset();
                 Thread.CurrentThread.PrintMessage("Extruder puts 1 biscuit");
+                rotationsCountdown.Wait();
+                rotationsCountdown.Reset();
                 Thread.CurrentThread.PrintMessage("Stamper stamps 1 biscuit");
-                //if (cancelToken.IsCancellationRequested)
-                //{
-                //    Thread.CurrentThread.PrintMessage("Closing...");
-
-                //    cancelToken.ThrowIfCancellationRequested();
-                //}
             }
         }
     }
