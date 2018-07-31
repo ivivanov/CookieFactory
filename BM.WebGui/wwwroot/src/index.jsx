@@ -2,7 +2,7 @@
 
 const e = React.createElement;
 
-class LikeButton extends React.Component {
+class BMEventLogger extends React.Component {
     constructor(props) {
         super(props);
         this.state = { liked: false };
@@ -13,13 +13,17 @@ class LikeButton extends React.Component {
             return 'You liked this.';
         }
 
-        return e(
-            'button',
-            { onClick: () => this.setState({ liked: true }) },
-            'Like'
+        return (
+            <button onClick={() => this.setState({ liked: true })}>
+                Like
+
+
+
+                asd
+            </button>
         );
     }
 }
 
 const domContainer = document.querySelector('#index_container');
-ReactDOM.render(e(LikeButton), domContainer);
+ReactDOM.render(e(BMEventLogger), domContainer);
