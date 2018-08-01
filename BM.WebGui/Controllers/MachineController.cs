@@ -2,7 +2,7 @@
 
 namespace BM.WebGui
 {
-    public class HomeController : Controller
+    public class MachineController : Controller
     {
         public IActionResult Index()
         {

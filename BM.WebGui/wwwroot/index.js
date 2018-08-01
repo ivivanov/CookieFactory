@@ -36,7 +36,7 @@ var BMEventLogger = function (_React$Component) {
                 { onClick: function onClick() {
                         return _this2.setState({ liked: true });
                     } },
-                'Like asd'
+                'Likes'
             );
         }
     }]);

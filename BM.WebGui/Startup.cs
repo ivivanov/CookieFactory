@@ -29,7 +29,7 @@ namespace BM.WebGui
             {
                 routes.MapSpaFallbackRoute(
                     name: "default",
-                    defaults: new { controller = "Home", action = "Index" });
+                    defaults: new { controller = "Machine", action = "Index" });
             });
 
             app.UseWebSockets();

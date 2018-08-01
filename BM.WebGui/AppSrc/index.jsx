@@ -15,11 +15,7 @@ class BMEventLogger extends React.Component {
 
         return (
             <button onClick={() => this.setState({ liked: true })}>
-                Like
-
-
-
-                asd
+                Likes
             </button>
         );
     }
