@@ -23,15 +23,6 @@ namespace BM.WebGui
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseStaticFiles();
-
-            app.UseMvc(routes =>
-            {
-                routes.MapSpaFallbackRoute(
-                    name: "default",
-                    defaults: new { controller = "Machine", action = "Index" });
-            });
-
             app.UseWebSockets();
 
             app.Use(async (context, next) =>
@@ -41,6 +32,7 @@ namespace BM.WebGui
                     if (context.WebSockets.IsWebSocketRequest)
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                        //await FakeLog(webSocket);
                         await Echo(context, webSocket);
                     }
                     else
@@ -54,6 +46,43 @@ namespace BM.WebGui
                 }
 
             });
+
+            app.UseStaticFiles();
+
+            app.UseMvc(routes =>
+            {
+                routes.MapSpaFallbackRoute(
+                    name: "default",
+                    defaults: new { controller = "Machine", action = "Index" });
+            });
+
+
+        }
+
+        private async Task FakeLog(WebSocket webSocket)
+        {
+            var buffer = new byte[1024 * 4];
+            Random random = new Random();
+            bool end = false;
+
+            while (!webSocket.CloseStatus.HasValue || end)
+            {
+                int randomInt = random.Next(1, 100000);
+
+                if (randomInt == 999)
+                {
+                    end = true;
+                }
+
+                byte[] intBytes = BitConverter.GetBytes(randomInt);
+                Array.Reverse(intBytes);
+                buffer = intBytes;
+
+                await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, intBytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+
+            }
+
+            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "999", CancellationToken.None);
         }
 
         private async Task Echo(HttpContext context, WebSocket webSocket)
