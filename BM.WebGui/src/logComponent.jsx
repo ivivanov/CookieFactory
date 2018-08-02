@@ -7,7 +7,7 @@ class LogComponent extends Component {
       connection: "Closed",
       log: ""
     };
-    this.connectionUrl = "ws://localhost:52020/ws";
+    this.connectionUrl = "ws://localhost:5006/ws";
     this.socket = new WebSocket(this.connectionUrl);
   }
 
@@ -22,7 +22,10 @@ class LogComponent extends Component {
 
     this.socket.onclose = function(event) {
       self.setState(function(prevState, props) {
-        return { connection: "Closed" };
+        return {
+          connection: "Closed",
+          log: prevState.log + event.data ? event.data : "disconected" + "\n"
+        };
       });
     };
 
@@ -33,23 +36,22 @@ class LogComponent extends Component {
     };
 
     this.socket.onmessage = function(event) {
+      debugger;
       self.setState(function(prevState, props) {
-        return { log: prevState.log + event.data };
+        return { log: prevState.log + event.data + "\n"};
       });
     };
   }
 
-  handleLogChange(){
-
-  }
+  handleLogChange() {}
 
   render() {
     return (
       <div>
         <p>Connection: {this.state.connection}</p>
         <textarea
-          id='commsLog'
-          className='event-logger'
+          id="commsLog"
+          className="event-logger"
           value={this.state.log}
           disabled
         />

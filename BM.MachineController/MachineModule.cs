@@ -1,23 +1,24 @@
-﻿using System;
+﻿using BM.Common;
+using System;
 using System.Threading;
 
-namespace BM.Experiments
+namespace BM.MachineController
 {
-
-    public class MachineController
+    public class MachineModule
     {
         private const int RotationsPerBiscuit = 2;//total 4 rotations (2 extruder + 2 stamper)
-        private ManualResetEventSlim ovenIsReadyEvent;
-        private CountdownEvent rotationsCountdown;
+        private readonly ManualResetEventSlim ovenIsReadyEvent;
+        private readonly CountdownEvent rotationsCountdown;
+        private readonly CancellationTokenSource cancelSource;
+        private readonly OvenModule ovenModule;
+        private readonly BiscuitMakerModule biscuitMakerModule;
+        private readonly MotorModule motorModule;
+        private readonly IMessageIOProvider message;
 
-        private CancellationTokenSource cancelSource;
-
-        private OvenModule ovenModule;
-        private BiscuitMakerModule biscuitMakerModule;
-        private MotorModule motorModule;
-
-        public MachineController()
+        public MachineModule(IMessageIOProvider message)
         {
+            Thread.CurrentThread.Name = nameof(MachineModule);
+            this.message = message;
             ovenIsReadyEvent = new ManualResetEventSlim(false);
             rotationsCountdown = new CountdownEvent(RotationsPerBiscuit);
             cancelSource = new CancellationTokenSource();
@@ -26,14 +27,7 @@ namespace BM.Experiments
             this.biscuitMakerModule = new BiscuitMakerModule(rotationsCountdown);
             this.motorModule = new MotorModule(ovenIsReadyEvent, rotationsCountdown);
         }
-
-        public MachineController Init()
-        {
-            Thread.CurrentThread.Name = nameof(MachineController);
-
-            return this;
-        }
-
+        
         public void Pause()
         {
             //can pause only if started
@@ -50,6 +44,7 @@ namespace BM.Experiments
         public void Start()
         {
             Thread.CurrentThread.PrintMessage("Start");
+            message.Send(new Message(MessageType.Text, $"{nameof(MachineModule)} started"));
 
             ovenModule.Start();
             motorModule.Start();
