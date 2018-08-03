@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
-using System.Threading.Tasks;
 
 using BM.MachineController;
 
@@ -29,7 +27,8 @@ namespace BM.Websockets.Server
             Console.WriteLine($"Ready");
 
             var messageManager = new MessageIOProvider(serviceProvider);
-            var machine = new MachineModule(messageManager);
+            var synchronizers = new MachineModulesSynchronizers();
+            var machine = new MachineModulesController(messageManager, synchronizers);
 
             machine.Start();
 
@@ -43,7 +42,7 @@ namespace BM.Websockets.Server
                     {
                         while (messageManager.HaveMessages)
                         {
-                            websocketHandler.SendMessageAsync(messageManager.GetMessage().Data);
+                            websocketHandler.SendMessageAsync(messageManager.GetMessage());
                         }
                     }
                 }

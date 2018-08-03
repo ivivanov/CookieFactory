@@ -1,35 +1,33 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using BM.Common;
+﻿using BM.Common;
 using System;
-using System.Threading.Tasks;
 using System.Collections.Concurrent;
 
 namespace BM.Websockets.Server
 {
     public class MessageIOProvider : IMessageIOProvider
     {
-        private readonly ConcurrentQueue<Message> messsageQueue;
+        private readonly ConcurrentQueue<string> messsageQueue;
 
         public bool HaveMessages => !this.messsageQueue.IsEmpty;
      
         public MessageIOProvider(IServiceProvider serviceProvider)
         {
-            this.messsageQueue = new ConcurrentQueue<Message>();
+            this.messsageQueue = new ConcurrentQueue<string>();
         }
 
-        public async Task Receive(Message message)
+        public void Receive(string message)
         {
             throw new NotImplementedException();
         }
 
-        public void Send(Message message)
+        public void Send(string message)
         {
             this.messsageQueue.Enqueue(message);
         }
 
-        public Message GetMessage()
+        public string GetMessage()
         {
-            messsageQueue.TryDequeue(out Message message);
+            messsageQueue.TryDequeue(out string message);
             return message;
         }
     }

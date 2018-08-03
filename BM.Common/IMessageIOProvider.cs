@@ -4,8 +4,8 @@ namespace BM.Common
 {
     public interface IMessageIOProvider
     {
-        void Send(Message message);
+        void Send(string message);
 
-        Task Receive(Message message);
+        void Receive(string message);
     }
 }
