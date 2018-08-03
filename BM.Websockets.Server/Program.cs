@@ -36,21 +36,30 @@ namespace BM.Websockets.Server
 
             new Thread(() =>
             {
-                try
+                while (true)
                 {
-                    while (true)
+                    while (messageManager.HaveOutgoingMessages)
                     {
-                        while (messageManager.HaveMessages)
-                        {
-                            websocketHandler.SendMessageAsync(messageManager.GetMessage());
-                        }
+                        websocketHandler.SendMessageAsync(messageManager.GetOutgoingMessage());
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                }
+
+
             }).Start();
 
+
+            new Thread(() =>
+            {
+                while (true)
+                {
+                    while (messageManager.HaveOutgoingMessages)
+                    {
+                        websocketHandler.SendMessageAsync(messageManager.GetOutgoingMessage());
+                    }
+                }
+
+
+            }).Start();
             //keep console open 
             while (true) ;
         }

@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace BM.Common
+﻿namespace BM.Common
 {
     public interface IMessageIOProvider
     {

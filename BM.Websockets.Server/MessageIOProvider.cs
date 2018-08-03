@@ -6,28 +6,38 @@ namespace BM.Websockets.Server
 {
     public class MessageIOProvider : IMessageIOProvider
     {
-        private readonly ConcurrentQueue<string> messsageQueue;
+        private readonly ConcurrentQueue<string> outgoingMesssageQueue;
+        private readonly ConcurrentQueue<string> incomingMesssageQueue;
 
-        public bool HaveMessages => !this.messsageQueue.IsEmpty;
+        public bool HaveOutgoingMessages => !this.outgoingMesssageQueue.IsEmpty;
+
+        public bool HaveIncomingMessages => !this.incomingMesssageQueue.IsEmpty;
      
         public MessageIOProvider(IServiceProvider serviceProvider)
         {
-            this.messsageQueue = new ConcurrentQueue<string>();
+            this.outgoingMesssageQueue = new ConcurrentQueue<string>();
+            this.incomingMesssageQueue = new ConcurrentQueue<string>();
         }
 
         public void Receive(string message)
         {
-            throw new NotImplementedException();
+            this.incomingMesssageQueue.Enqueue(message);
         }
 
         public void Send(string message)
         {
-            this.messsageQueue.Enqueue(message);
+            this.outgoingMesssageQueue.Enqueue(message);
         }
 
-        public string GetMessage()
+        public string GetOutgoingMessage()
         {
-            messsageQueue.TryDequeue(out string message);
+            outgoingMesssageQueue.TryDequeue(out string message);
+            return message;
+        }
+
+        public string GetIncomingMessage()
+        {
+            incomingMesssageQueue.TryDequeue(out string message);
             return message;
         }
     }

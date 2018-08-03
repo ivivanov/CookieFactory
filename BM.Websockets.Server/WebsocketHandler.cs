@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -19,9 +20,8 @@ namespace BM.Websockets.Server
             await SendMessageAsync(this.socket, message);
         }
 
-        public async Task ReceiveAsync(WebSocket socket, WebSocketReceiveResult result, byte[] buffer)
+        public async Task ReceiveAsync(WebSocket socket, WebSocketReceiveResult result, string message)
         {
-
         }
 
         public async Task OnConnected(WebSocket socket)
@@ -43,12 +43,11 @@ namespace BM.Websockets.Server
             if (socket.State != WebSocketState.Open)
                 return;
 
-            await socket.SendAsync(buffer: new ArraySegment<byte>(array: Encoding.ASCII.GetBytes(message),
-                                                                  offset: 0,
-                                                                  count: message.Length),
-                                   messageType: WebSocketMessageType.Text,
-                                   endOfMessage: true,
-                                   cancellationToken: CancellationToken.None);
+            await socket.SendAsync(
+                new ArraySegment<byte>(Encoding.ASCII.GetBytes(message), 0, message.Length),
+                WebSocketMessageType.Text,
+                true,
+                CancellationToken.None);
         }
     }
 }
