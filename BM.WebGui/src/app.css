@@ -7,3 +7,13 @@
   width: 100%;
   height: 100px;
 }
+
+span {
+  transition: 300ms all ease;
+  opacity: 1;
+  will-change: opacity;
+}
+
+.hide {
+  opacity: 0;
+}
