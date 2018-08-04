@@ -4,33 +4,30 @@ using System.Threading;
 
 namespace BM.MachineController.Modules
 {
-    public class BiscuitMakerModule : IModule
+    public class BiscuitMakerModule : BaseModule
     {
         private readonly CountdownEvent rotationsCountdown;
         private readonly Thread biscuitMakerThread;
-        private readonly IMessageIOProvider message;
 
-        public string Name => nameof(BiscuitMakerModule);
+        public override string Name => nameof(BiscuitMakerModule);
 
-        public BiscuitMakerModule(MachineModulesSynchronizers synchronizers, IMessageIOProvider message)
+        public BiscuitMakerModule(MachineModulesSynchronizers synchronizers, IMessageIOProvider message) : base(message)
         {
             this.rotationsCountdown = synchronizers.rotationsCountdown;
-            this.message = message;
-
             biscuitMakerThread = new Thread(ThreadStartDelagate) { Name = Name };
         }
 
-        public void Pause()
+        public override void Pause()
         {
             throw new NotImplementedException();
         }
 
-        public void Start()
+        public override void Start()
         {
             biscuitMakerThread.Start();
         }
 
-        public void Stop()
+        public override void Stop()
         {
             throw new NotImplementedException();
         }
@@ -39,8 +36,7 @@ namespace BM.MachineController.Modules
         {
             try
             {
-                Thread.CurrentThread.PrintMessage("Start");
-                message.Send($"{Name}: start");
+                DispatchMessage("Start");
                 BiscuitMakerJob();
             }
             catch (OperationCanceledException)
@@ -54,12 +50,10 @@ namespace BM.MachineController.Modules
             {
                 rotationsCountdown.Wait();
                 rotationsCountdown.Reset();
-                Thread.CurrentThread.PrintMessage("Extruder puts 1 biscuit");
-                message.Send($"{Name}: Extruder puts 1 biscuit");
+                DispatchMessage("Extruder puts 1 biscuit");
                 rotationsCountdown.Wait();
                 rotationsCountdown.Reset();
-                Thread.CurrentThread.PrintMessage("Stamper stamps 1 biscuit");
-                message.Send($"{Name}: Stamper stamps 1 biscuit");
+                DispatchMessage("Stamper stamps 1 biscuit");
             }
         }
     }

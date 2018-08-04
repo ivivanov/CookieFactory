@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ModuleMessageDispatcher.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BM.Common\BM.Common.csproj" />
   </ItemGroup>
 

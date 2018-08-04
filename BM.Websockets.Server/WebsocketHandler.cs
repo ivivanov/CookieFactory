@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BM.Common;
+using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -10,9 +10,11 @@ namespace BM.Websockets.Server
     public class WebsocketHandler
     {
         private WebSocket socket;
+        private readonly IMessageIOProvider message;
 
-        public WebsocketHandler()
+        public WebsocketHandler(IMessageIOProvider message)
         {
+            this.message = message;
         }
 
         public async Task SendMessageAsync(string message)
@@ -20,15 +22,14 @@ namespace BM.Websockets.Server
             await SendMessageAsync(this.socket, message);
         }
 
-        public async Task ReceiveAsync(WebSocket socket, WebSocketReceiveResult result, string message)
+        public void Receive(string text)
         {
+            message.Receive(text);
         }
 
-        public async Task OnConnected(WebSocket socket)
+        public void OnConnected(WebSocket socket)
         {
             this.socket = socket;
-
-            await SendMessageAsync("connected");
         }
 
         public async Task OnDisconnected(WebSocket socket)

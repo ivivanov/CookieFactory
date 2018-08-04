@@ -4,37 +4,34 @@ using System.Threading;
 
 namespace BM.MachineController.Modules
 {
-    public class HeatingModule : IModule
+    public class HeatingModule : BaseModule
     {
         private readonly ManualResetEventSlim reachMaxTempEvent;
         private readonly ManualResetEventSlim reachMinTempEvent;
-        private readonly IMessageIOProvider message;
         private readonly TemperatureState temperatureState;
         private readonly Thread heatingThread;
 
-        public string Name => nameof(HeatingModule);
+        public override string Name => nameof(HeatingModule);
 
-        public HeatingModule(TemperatureState temperatureState, MachineModulesSynchronizers synchronizers, IMessageIOProvider message)
+        public HeatingModule(TemperatureState temperatureState, MachineModulesSynchronizers synchronizers, IMessageIOProvider message) : base(message)
         {
             this.temperatureState = temperatureState;
             this.reachMaxTempEvent = synchronizers.reachMaxTempEvent;
             this.reachMinTempEvent = synchronizers.reachMinTempEvent;
-            this.message = message;
-
             heatingThread = new Thread(ThreadStartDelagate) { Name = Name };
         }
 
-        public void Start()
+        public override void Start()
         {
             heatingThread.Start();
         }
 
-        public void Pause()
+        public override void Pause()
         {
             throw new NotImplementedException();
         }
 
-        public void Stop()
+        public override void Stop()
         {
             throw new NotImplementedException();
         }
@@ -43,8 +40,7 @@ namespace BM.MachineController.Modules
         {
             try
             {
-                Thread.CurrentThread.PrintMessage("Start");
-                message.Send($"{Name}: start");
+                DispatchMessage("Start");
                 HeatOvenJob();
             }
             catch (OperationCanceledException)
@@ -56,12 +52,10 @@ namespace BM.MachineController.Modules
         {
             while (true)
             {
-                Thread.CurrentThread.PrintMessage("Heating...");
-                message.Send($"{Name}: Heating...");
+                DispatchMessage("On");
                 reachMaxTempEvent.Reset();
                 reachMaxTempEvent.Wait();
-                Thread.CurrentThread.PrintMessage("Cooling...");
-                message.Send($"{Name}: Cooling...");
+                DispatchMessage("Off");
                 reachMinTempEvent.Reset();
                 reachMinTempEvent.Wait();
             }

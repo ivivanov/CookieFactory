@@ -1,54 +1,39 @@
-﻿using BM.Common;
-using BM.MachineController.Modules;
-using System.Threading;
+﻿using BM.MachineController.Modules;
 
 namespace BM.MachineController
 {
     public class MachineModulesController
     {
-        private readonly IMessageIOProvider message;
-
-        //private readonly CancellationTokenSource cancelSource;
-
-        //machine modules
         private readonly IModule ovenModule;
         private readonly IModule biscuitMakerModule;
         private readonly IModule motorModule;
 
 
-        public MachineModulesController(IMessageIOProvider message, MachineModulesSynchronizers synchronizers)
+        public MachineModulesController(OvenModule ovenModule, BiscuitMakerModule biscuitMakerModule, MotorModule motorModule)
         {
-            this.message = message;
-            //this.cancelSource = synchronizers.cancelSource;
-            //TODO
-            TemperatureState temperatureState = new TemperatureState();
-
-            this.ovenModule = new OvenModule(
-                new HeatingModule(temperatureState, synchronizers, message),
-                new ThermometerModule(temperatureState, synchronizers, message),
-                temperatureState,
-                message,
-                synchronizers);
-
-            this.biscuitMakerModule = new BiscuitMakerModule(synchronizers, message);
-            this.motorModule = new MotorModule(synchronizers, message);
+            this.ovenModule = ovenModule;
+            this.biscuitMakerModule = biscuitMakerModule;
+            this.motorModule = motorModule;
         }
 
         public void Pause()
         {
+            //TODO
             //can pause only if started
             //cancelSource.Cancel();
         }
 
         public void Stop()
         {
+            //TODO
             //can stop only if started
             //ovenIsReadyEvent.WaitHandle.Close();
-
         }
 
         public void Start()
         {
+            //TODO 
+            //cant start twice
             ovenModule.Start();
             motorModule.Start();
             biscuitMakerModule.Start();

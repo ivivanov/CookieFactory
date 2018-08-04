@@ -4,46 +4,40 @@ using System.Threading;
 
 namespace BM.MachineController.Modules
 {
-    public class ThermometerModule : IModule
+    public class ThermometerModule : BaseModule
     {
         private readonly ManualResetEventSlim reachMaxTempEvent;
         private readonly ManualResetEventSlim reachMinTempEvent;
-        private readonly IMessageIOProvider message;
         private readonly TemperatureState temperatureState;
         private readonly Thread thermometerThread;
 
-        public string Name => nameof(ThermometerModule);
+        public override string Name => nameof(ThermometerModule);
 
-        public readonly int MaxTemperature;
-        public readonly int MinTemperature;
+        public const int MaxTemperature = MachineConfig.MaxTemperature;
+        public const int MinTemperature = MachineConfig.MinTemperature;
 
         public ThermometerModule(
             TemperatureState temperatureState,
             MachineModulesSynchronizers synchronizers,
-            IMessageIOProvider message)
+            IMessageIOProvider message) : base(message)
         {
             this.temperatureState = temperatureState;
             this.reachMaxTempEvent = synchronizers.reachMaxTempEvent;
             this.reachMinTempEvent = synchronizers.reachMinTempEvent;
-            this.message = message;
-
-            MaxTemperature = MachineConfig.MaxTemperature;
-            MinTemperature = MachineConfig.MinTemperature;
-
             thermometerThread = new Thread(ThreadStartDelagate) { Name = Name };
         }
 
-        public void Start()
+        public override void Start()
         {
             thermometerThread.Start();
         }
 
-        public void Pause()
+        public override void Pause()
         {
             throw new NotImplementedException();
         }
 
-        public void Stop()
+        public override void Stop()
         {
             throw new NotImplementedException();
         }
@@ -52,8 +46,7 @@ namespace BM.MachineController.Modules
         {
             try
             {
-                Thread.CurrentThread.PrintMessage("Start");
-                message.Send($"{Name}: start");
+                DispatchMessage("Start");
                 MeasureTemperatureJob();
             }
             catch (OperationCanceledException)
@@ -69,8 +62,7 @@ namespace BM.MachineController.Modules
             while (true)
             {
                 int temperature = temperatureState.GetTemperature();
-                Thread.CurrentThread.PrintMessage(temperature);
-                message.Send($"{Name}: {temperature}");
+                DispatchMessage(temperature.ToString());
 
                 if (temperature >= MaxTemperature)
                 {
@@ -96,7 +88,7 @@ namespace BM.MachineController.Modules
                     temperatureState.UpdateTemperature((-1) * random.Next(1, 10));
                 }
 
-                Thread.Sleep(300);
+                Thread.Sleep(1000);
             }
         }
     }

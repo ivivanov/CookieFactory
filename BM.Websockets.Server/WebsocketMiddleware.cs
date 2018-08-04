@@ -28,13 +28,13 @@ namespace BM.Websockets.Server
             }
 
             var socket = await context.WebSockets.AcceptWebSocketAsync();
-            await webSocketHandler.OnConnected(socket);
+            webSocketHandler.OnConnected(socket);
 
             await Receive(socket, async (result, message) =>
             {
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
-                    await webSocketHandler.ReceiveAsync(socket, result, message).ConfigureAwait(false);
+                    webSocketHandler.Receive(message);
                     return;
                 }
                 else if (result.MessageType == WebSocketMessageType.Close)

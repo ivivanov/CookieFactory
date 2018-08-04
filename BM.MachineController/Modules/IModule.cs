@@ -6,6 +6,8 @@ namespace BM.MachineController.Modules
 {
     public interface IModule
     {
+        string Name { get; }
+
         void Start();
 
         void Pause();

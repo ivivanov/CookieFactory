@@ -4,48 +4,45 @@ using System.Threading;
 
 namespace BM.MachineController.Modules
 {
-    public class OvenModule : IModule
+    public class OvenModule : BaseModule
     {
-        private readonly IMessageIOProvider message;
         private readonly ManualResetEventSlim ovenIsReadyEvent;
         private readonly HeatingModule heatingModule;
         private readonly ThermometerModule thermometerModule;
         private readonly Thread ovenThread;
         private readonly TemperatureState temperatureState;
-        public readonly int MaxTemperature;
-        public readonly int MinTemperature;
+
+        public const int MaxTemperature = MachineConfig.MaxTemperature;
+        public const int MinTemperature = MachineConfig.MinTemperature;
         private bool isOvenReady;
 
-        public string Name => nameof(OvenModule);
+        public override string Name => nameof(OvenModule);
 
         public OvenModule(
             HeatingModule heatingModule,
             ThermometerModule thermometerModule,
             TemperatureState temperatureState,
             IMessageIOProvider message,
-            MachineModulesSynchronizers synchronizers)
+            MachineModulesSynchronizers synchronizers) : base(message)
         {
             this.temperatureState = temperatureState;
             this.heatingModule = heatingModule;
             this.thermometerModule = thermometerModule;
             this.ovenIsReadyEvent = synchronizers.ovenIsReadyEvent;
-            this.message = message;
-            MaxTemperature = MachineConfig.MaxTemperature;
-            MinTemperature = MachineConfig.MinTemperature;
             ovenThread = new Thread(ThreadStartDelagate) { Name = Name };
         }
 
-        public void Start()
+        public override void Start()
         {
             ovenThread.Start();
         }
 
-        public void Pause()
+        public override void Pause()
         {
             throw new NotImplementedException();
         }
 
-        public void Stop()
+        public override void Stop()
         {
             throw new NotImplementedException();
         }
@@ -54,8 +51,7 @@ namespace BM.MachineController.Modules
         {
             try
             {
-                Thread.CurrentThread.PrintMessage("Start");
-                message.Send($"{Name}: start");
+                DispatchMessage("Start");
                 StartSubModules();
                 OvenJob();
             }

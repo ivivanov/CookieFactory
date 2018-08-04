@@ -13,7 +13,7 @@ namespace BM.Websockets.Server
 
         public bool HaveIncomingMessages => !this.incomingMesssageQueue.IsEmpty;
      
-        public MessageIOProvider(IServiceProvider serviceProvider)
+        public MessageIOProvider()
         {
             this.outgoingMesssageQueue = new ConcurrentQueue<string>();
             this.incomingMesssageQueue = new ConcurrentQueue<string>();

@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 
 using BM.MachineController;
+using BM.Common;
 
 namespace BM.Websockets.Server
 {
@@ -26,12 +27,8 @@ namespace BM.Websockets.Server
 
             Console.WriteLine($"Ready");
 
-            var messageManager = new MessageIOProvider(serviceProvider);
-            var synchronizers = new MachineModulesSynchronizers();
-            var machine = new MachineModulesController(messageManager, synchronizers);
-
-            machine.Start();
-
+            var messageManager = serviceProvider.GetService<IMessageIOProvider>() as MessageIOProvider;
+            var machine = serviceProvider.GetService<MachineModulesController>();
             var websocketHandler = serviceProvider.GetService<WebsocketHandler>();
 
             new Thread(() =>
@@ -47,21 +44,25 @@ namespace BM.Websockets.Server
 
             }).Start();
 
-
-            new Thread(() =>
+            while (true)
             {
-                while (true)
+                while (messageManager.HaveIncomingMessages)
                 {
-                    while (messageManager.HaveOutgoingMessages)
+                    string message = messageManager.GetIncomingMessage();
+                    switch (message)
                     {
-                        websocketHandler.SendMessageAsync(messageManager.GetOutgoingMessage());
+                        case "start":
+                            machine.Start();
+                            break;
+                        case "pause":
+                            break;
+                        case "stop":
+                            break;
+                        default:
+                            break;
                     }
                 }
-
-
-            }).Start();
-            //keep console open 
-            while (true) ;
+            }
         }
     }
 }

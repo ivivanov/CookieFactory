@@ -26,7 +26,9 @@ namespace BM.Websockets.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddWebSocketManager();
+            services.AddWebSocketManager()
+                    .AddMessageIOProvider()
+                    .AddMachineModules();
         }
     }
 }
