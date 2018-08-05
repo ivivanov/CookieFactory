@@ -21,12 +21,11 @@ namespace BM.Websockets.Server
                 .UseUrls("http://*:5006")
                 .Build();
 
-            IServiceProvider serviceProvider = webHostBuilder.Services;
-
             webHostBuilder.Start();
 
             Console.WriteLine($"Ready");
 
+            IServiceProvider serviceProvider = webHostBuilder.Services;
             var messageManager = serviceProvider.GetService<IMessageIOProvider>() as MessageIOProvider;
             var machine = serviceProvider.GetService<MachineModulesController>();
             var websocketHandler = serviceProvider.GetService<WebsocketHandler>();
@@ -40,8 +39,6 @@ namespace BM.Websockets.Server
                         websocketHandler.SendMessageAsync(messageManager.GetOutgoingMessage());
                     }
                 }
-
-
             }).Start();
 
             while (true)
@@ -55,8 +52,10 @@ namespace BM.Websockets.Server
                             machine.Start();
                             break;
                         case "pause":
+                            machine.Pause();
                             break;
                         case "stop":
+                            machine.Stop();
                             break;
                         default:
                             break;

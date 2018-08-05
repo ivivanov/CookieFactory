@@ -7,10 +7,13 @@ namespace BM.MachineController.Modules
     public class OvenModule : BaseModule
     {
         private readonly ManualResetEventSlim ovenIsReadyEvent;
+        private readonly ManualResetEventSlim lineIsEmptyEvent;
+        private readonly CancellationTokenSource cancellationTokenSource;
+        private readonly TemperatureState temperatureState;
+
+        private readonly Thread ovenThread;
         private readonly HeatingModule heatingModule;
         private readonly ThermometerModule thermometerModule;
-        private readonly Thread ovenThread;
-        private readonly TemperatureState temperatureState;
 
         public const int MaxTemperature = MachineConfig.MaxTemperature;
         public const int MinTemperature = MachineConfig.MinTemperature;
@@ -29,31 +32,23 @@ namespace BM.MachineController.Modules
             this.heatingModule = heatingModule;
             this.thermometerModule = thermometerModule;
             this.ovenIsReadyEvent = synchronizers.ovenIsReadyEvent;
+            this.lineIsEmptyEvent = synchronizers.lineIsEmptyEvent;
+            this.cancellationTokenSource = synchronizers.cancellationTokenSource;
             ovenThread = new Thread(ThreadStartDelagate) { Name = Name };
         }
 
         public override void Start()
         {
+            base.Start();
             ovenThread.Start();
-        }
-
-        public override void Pause()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Stop()
-        {
-            throw new NotImplementedException();
         }
 
         private void ThreadStartDelagate()
         {
             try
             {
-                DispatchMessage("Start");
                 StartSubModules();
-                OvenJob();
+                OvenJob(cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
             {
@@ -66,10 +61,17 @@ namespace BM.MachineController.Modules
             heatingModule.Start();
         }
 
-        private void OvenJob()
+        private void OvenJob(CancellationToken cancellationToken)
         {
             while (true)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    lineIsEmptyEvent.Wait();
+                    DispatchTurnedOffMessage();
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
                 int temperature = temperatureState.GetTemperature();
 
                 if (MaxTemperature > temperature

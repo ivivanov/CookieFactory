@@ -8,16 +8,22 @@ namespace BM.MachineController.Modules
     {
         private readonly ManualResetEventSlim reachMaxTempEvent;
         private readonly ManualResetEventSlim reachMinTempEvent;
+        private readonly ManualResetEventSlim lineIsEmptyEvent;
         private readonly TemperatureState temperatureState;
+        private readonly BiscuitCounterState biscuitCounterState;
+        private readonly CancellationTokenSource cancellationTokenSource;
         private readonly Thread heatingThread;
 
         public override string Name => nameof(HeatingModule);
 
-        public HeatingModule(TemperatureState temperatureState, MachineModulesSynchronizers synchronizers, IMessageIOProvider message) : base(message)
+        public HeatingModule(TemperatureState temperatureState, BiscuitCounterState biscuitCounterState, MachineModulesSynchronizers synchronizers, IMessageIOProvider message) : base(message)
         {
             this.temperatureState = temperatureState;
+            this.biscuitCounterState = biscuitCounterState;
             this.reachMaxTempEvent = synchronizers.reachMaxTempEvent;
             this.reachMinTempEvent = synchronizers.reachMinTempEvent;
+            this.lineIsEmptyEvent = synchronizers.lineIsEmptyEvent;
+            this.cancellationTokenSource = synchronizers.cancellationTokenSource;
             heatingThread = new Thread(ThreadStartDelagate) { Name = Name };
         }
 
@@ -26,36 +32,32 @@ namespace BM.MachineController.Modules
             heatingThread.Start();
         }
 
-        public override void Pause()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Stop()
-        {
-            throw new NotImplementedException();
-        }
-
         private void ThreadStartDelagate()
         {
             try
             {
-                DispatchMessage("Start");
-                HeatOvenJob();
+                HeatOvenJob(cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
             {
             }
         }
 
-        private void HeatOvenJob()
+        private void HeatOvenJob(CancellationToken cancellationToken)
         {
             while (true)
             {
-                DispatchMessage("On");
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    lineIsEmptyEvent.Wait();
+                    DispatchTurnedOffMessage();
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
+                DispatchTurnedOnMessage();
                 reachMaxTempEvent.Reset();
                 reachMaxTempEvent.Wait();
-                DispatchMessage("Off");
+                DispatchTurnedOffMessage();
                 reachMinTempEvent.Reset();
                 reachMinTempEvent.Wait();
             }

@@ -8,6 +8,8 @@ namespace BM.MachineController.Modules
     {
         private readonly ManualResetEventSlim reachMaxTempEvent;
         private readonly ManualResetEventSlim reachMinTempEvent;
+        private readonly ManualResetEventSlim lineIsEmptyEvent;
+        private readonly CancellationTokenSource cancellationTokenSource;
         private readonly TemperatureState temperatureState;
         private readonly Thread thermometerThread;
 
@@ -24,45 +26,44 @@ namespace BM.MachineController.Modules
             this.temperatureState = temperatureState;
             this.reachMaxTempEvent = synchronizers.reachMaxTempEvent;
             this.reachMinTempEvent = synchronizers.reachMinTempEvent;
+            this.lineIsEmptyEvent = synchronizers.lineIsEmptyEvent;
+            this.cancellationTokenSource = synchronizers.cancellationTokenSource;
             thermometerThread = new Thread(ThreadStartDelagate) { Name = Name };
         }
 
         public override void Start()
         {
+            base.Start();
             thermometerThread.Start();
-        }
-
-        public override void Pause()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Stop()
-        {
-            throw new NotImplementedException();
         }
 
         private void ThreadStartDelagate()
         {
             try
             {
-                DispatchMessage("Start");
-                MeasureTemperatureJob();
+                MeasureTemperatureJob(cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
             {
             }
         }
 
-        private void MeasureTemperatureJob()
+        private void MeasureTemperatureJob(CancellationToken cancellationToken)
         {
             bool isHeating = true;
             Random random = new Random();
 
             while (true)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    lineIsEmptyEvent.Wait();
+                    DispatchMessage(0);
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
                 int temperature = temperatureState.GetTemperature();
-                DispatchMessage(temperature.ToString());
+                DispatchMessage(temperature);
 
                 if (temperature >= MaxTemperature)
                 {

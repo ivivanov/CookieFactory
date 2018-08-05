@@ -11,6 +11,7 @@ namespace BM.Websockets.Server
         {
             services.AddSingleton<MachineModulesSynchronizers>();
             services.AddSingleton<TemperatureState>();
+            services.AddSingleton<BiscuitCounterState>();
 
             services.AddTransient<MachineModulesController>();
             services.AddTransient<OvenModule>();
@@ -18,6 +19,7 @@ namespace BM.Websockets.Server
             services.AddTransient<ThermometerModule>();
             services.AddTransient<BiscuitMakerModule>();
             services.AddTransient<MotorModule>();
+            services.AddTransient<BiscuitCounterModule>();
 
             return services;
         }

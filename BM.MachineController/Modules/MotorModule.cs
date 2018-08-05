@@ -8,30 +8,26 @@ namespace BM.MachineController.Modules
     {
         private readonly ManualResetEventSlim ovenIsReadyEvent;
         private readonly CountdownEvent rotationsCountdown;
+        private readonly CancellationTokenSource cancellationTokenSource;
+        private readonly BiscuitCounterState biscuitCounterState;
         private readonly Thread motorThread;
 
         public override string Name => nameof(MotorModule);
 
-        public MotorModule(MachineModulesSynchronizers synchronizers, IMessageIOProvider message) : base(message)
+        public MotorModule(MachineModulesSynchronizers synchronizers, BiscuitCounterState biscuitCounterState, IMessageIOProvider message) : base(message)
         {
             this.ovenIsReadyEvent = synchronizers.ovenIsReadyEvent;
-            this.rotationsCountdown = synchronizers.rotationsCountdown;
-            motorThread = new Thread(ThreadStartDelagate) { Name = Name };
-        }
-
-        public override void Pause()
-        {
-            throw new NotImplementedException();
+            this.rotationsCountdown = synchronizers.rotationsCountdownEvent;
+            this.biscuitCounterState = biscuitCounterState;
+            this.cancellationTokenSource = synchronizers.cancellationTokenSource;
+            this.motorThread = new Thread(ThreadStartDelagate) { Name = Name };
+            this.motorThread = new Thread(ThreadStartDelagate) { Name = Name };
         }
 
         public override void Start()
         {
+            base.Start();
             motorThread.Start();
-        }
-
-        public override void Stop()
-        {
-            throw new NotImplementedException();
         }
 
         private void ThreadStartDelagate()
@@ -39,22 +35,37 @@ namespace BM.MachineController.Modules
             try
             {
                 ovenIsReadyEvent.Wait();
-                DispatchMessage("Start");
-                RotationJob();
+                RotationJob(cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
             {
             }
         }
 
-        private void RotationJob()
+        private void RotationJob(CancellationToken cancellationToken)
         {
             while (true)
             {
-                Thread.Sleep(1000); //simulate 1 full rotation of the motor gear
-                DispatchMessage("Pulse...");
-                rotationsCountdown.Signal();
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    while (biscuitCounterState.Count() > 0 )
+                    {
+                        RotateAndSignal();
+                    }
+
+                    DispatchTurnedOffMessage();
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
+                RotateAndSignal();
             }
+        }
+
+        private void RotateAndSignal()
+        {
+            Thread.Sleep(1000); //simulate 1 full rotation of the motor gear
+            DispatchMessage("Pulse...");
+            rotationsCountdown.Signal();
         }
     }
 }

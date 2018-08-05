@@ -14,16 +14,34 @@ namespace BM.MachineController.Modules
 
         public abstract string Name { get; }
 
-        public abstract void Pause();
+        public virtual void Pause() { }
 
-        public abstract void Start();
+        public virtual void Start()
+        {
+            DispatchTurnedOnMessage();
+        }
 
-        public abstract void Stop();
+        public virtual void Stop() { }
+
+        public virtual void DispatchMessage(int message)
+        {
+            DispatchMessage(message.ToString());
+        }
 
         public virtual void DispatchMessage(string message)
         {
             Thread.CurrentThread.PrintMessage(message);
             messageProvider.Send($"{Name}:{message}");
+        }
+
+        public virtual void DispatchTurnedOnMessage()
+        {
+            DispatchMessage(MachineConfig.TurnedOnMessage);
+        }
+
+        public virtual void DispatchTurnedOffMessage()
+        {
+            DispatchMessage(MachineConfig.TurnedOffMessage);
         }
     }
 }

@@ -11,18 +11,24 @@ namespace BM.MachineController
         private const int RotationsPerBiscuit = 2;//total 4 rotations (2 extruder + 2 stamper)
 
         public readonly ManualResetEventSlim ovenIsReadyEvent;
-        public readonly CountdownEvent rotationsCountdown;
+        public readonly CountdownEvent rotationsCountdownEvent;
         public readonly ManualResetEventSlim reachMaxTempEvent;
         public readonly ManualResetEventSlim reachMinTempEvent;
-        public readonly CancellationTokenSource cancelSource;
+        public readonly AutoResetEvent newBiscuitOnTheLineEvent;
+        public readonly AutoResetEvent noBiscuitsOnTheLineEvent;
+        public readonly ManualResetEventSlim lineIsEmptyEvent;
+        public readonly CancellationTokenSource cancellationTokenSource;
 
         public MachineModulesSynchronizers()
         {
             this.ovenIsReadyEvent = new ManualResetEventSlim(false);
-            this.rotationsCountdown = new CountdownEvent(RotationsPerBiscuit);
+            this.rotationsCountdownEvent = new CountdownEvent(RotationsPerBiscuit);
             this.reachMaxTempEvent = new ManualResetEventSlim(false);
             this.reachMinTempEvent = new ManualResetEventSlim(true);
-            this.cancelSource = new CancellationTokenSource();
+            this.newBiscuitOnTheLineEvent = new AutoResetEvent(false);
+            this.noBiscuitsOnTheLineEvent = new AutoResetEvent(false);
+            this.lineIsEmptyEvent = new ManualResetEventSlim(false);
+            this.cancellationTokenSource = new CancellationTokenSource();
         }
     }
 }
