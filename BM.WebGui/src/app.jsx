@@ -32,6 +32,7 @@ class App extends Component {
 
   start() {
     this.socket.send('start');
+    this.setState(function () { return { isStarted: true } });
   }
 
   pause() {
@@ -59,6 +60,7 @@ class App extends Component {
           connection: 'Closed',
           log: prevState.log + event.data ? event.data : 'disconected' + '\n',
           isConnected: false,
+          isStarted: false,
           oven: 'Off',
           temperature: 0,
           heating: 'Off',
@@ -185,9 +187,9 @@ class App extends Component {
         <div className='row p-1'>
           <div className='col'>
             <div className='btn-group' role='group'>
-              <button className='btn btn-primary' disabled={!this.state.isConnected} onClick={this.start}>Start</button>
-              <button className='btn btn-primary' disabled={!this.state.isConnected} onClick={this.pause}>Pause</button>
-              <button className='btn btn-primary' disabled={!this.state.isConnected} onClick={this.stop}>Stop</button>
+              <button className='btn btn-primary' disabled={!this.state.isConnected && !this.state.isStarted} onClick={this.start}>Start</button>
+              <button className='btn btn-primary' disabled>Pause</button>
+              <button className='btn btn-primary' disabled={!this.state.isStarted} onClick={this.stop}>Stop</button>
               <button className={!this.state.isConnected ? 'btn btn-danger' : 'btn btn-success'} disabled>Websocket connection: {this.state.connection}</button>
             </div>
           </div>
