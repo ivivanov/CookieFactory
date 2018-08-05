@@ -25,7 +25,6 @@ namespace BM.MachineController
         {
             //TODO
             //can pause only if started
-            //cancelSource.Cancel();
         }
 
         public void Stop()

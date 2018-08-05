@@ -3,10 +3,8 @@
     public class TemperatureState
     {
         private readonly object locker = new object();
-
-        //TODO 
-        //set to 0 
-        private int temperature = 200;
+        
+        private int temperature;
 
         public int GetTemperature()
         {
