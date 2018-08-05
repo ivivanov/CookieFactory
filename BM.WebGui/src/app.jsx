@@ -16,7 +16,11 @@ class App extends Component {
       biscuitMaker: 'Off',
       hideMotorPulse: true,
       hideExtruderPulse: true,
-      hideStamperPulse: true
+      hideStamperPulse: true,
+      pulseHideTimeout: 500,
+      biscuitCounter: 'Off',
+      baking: 0,
+      baked: 0
     };
 
     this.connectionUrl = 'ws://localhost:5006/ws';
@@ -62,7 +66,10 @@ class App extends Component {
           biscuitMaker: 'Off',
           hideMotorPulse: true,
           hideExtruderPulse: true,
-          hideStamperPulse: true
+          hideStamperPulse: true,
+          biscuitCounter: 'Off',
+          baking: 0,
+          baked: 0
         };
       });
     };
@@ -93,9 +100,7 @@ class App extends Component {
 
     switch (module) {
       case 'OvenModule':
-        if (value === "Start") {
-          this.setState({ oven: "On" });
-        }
+        this.setState({ oven: value });
         break;
       case 'HeatingModule':
         this.setState({ heating: value });
@@ -104,10 +109,11 @@ class App extends Component {
         this.setState({ temperature: value });
         break;
       case 'MotorModule':
-        if (value === "Start") {
-          this.setState({ motor: "On" });
+        if (value === "On" || value === "Off") {
+          this.setState({ motor: value });
         }
 
+        //Make the text "pulse"
         if (value == "Pulse...") {
           this.setState({
             hideMotorPulse: false,
@@ -117,12 +123,12 @@ class App extends Component {
             this.setState({
               hideMotorPulse: true,
             });
-          }, 400);
+          }, this.state.pulseHideTimeout);
         }
         break;
       case 'BiscuitMakerModule':
-        if (value === "Start") {
-          this.setState({ biscuitMaker: "On" });
+        if (value === "On" || value === "Off") {
+          this.setState({ biscuitMaker: value });
         }
 
         if (value.includes("Extruder")) {
@@ -134,8 +140,9 @@ class App extends Component {
             this.setState({
               hideExtruderPulse: true,
             });
-          }, 400);
+          }, this.state.pulseHideTimeout);
         }
+
         if (value.includes("Stamper")) {
           this.setState({
             hideStamperPulse: false,
@@ -145,9 +152,22 @@ class App extends Component {
             this.setState({
               hideStamperPulse: true,
             });
-          }, 400);
+          }, this.state.pulseHideTimeout);
         }
 
+        break;
+      case "BiscuitCounterModule":
+        if (value === "On" || value === "Off") {
+          this.setState({ biscuitCounter: value });
+        }
+
+        if (parsedMessage[1] == "Baking") {
+          this.setState({ baking: parsedMessage[2] });
+        }
+
+        if (parsedMessage[1] == "Baked") {
+          this.setState({ baked: parsedMessage[2] });
+        }
         break;
       default:
         this.setState(function (prevState, props) {
@@ -161,14 +181,14 @@ class App extends Component {
   render() {
     return (
       <div className='app container'>
-        <h3>The Biscuit Machine</h3>
+        <h3 className='pb-3'>The Biscuit Machine</h3>
         <div className='row p-1'>
           <div className='col'>
             <div className='btn-group' role='group'>
               <button className='btn btn-primary' disabled={!this.state.isConnected} onClick={this.start}>Start</button>
               <button className='btn btn-primary' disabled={!this.state.isConnected} onClick={this.pause}>Pause</button>
               <button className='btn btn-primary' disabled={!this.state.isConnected} onClick={this.stop}>Stop</button>
-              <button className={!this.state.isConnected ? 'btn btn-danger': 'btn btn-success'} disabled>Websocket connection: {this.state.connection}</button>
+              <button className={!this.state.isConnected ? 'btn btn-danger' : 'btn btn-success'} disabled>Websocket connection: {this.state.connection}</button>
             </div>
           </div>
         </div>
@@ -243,6 +263,35 @@ class App extends Component {
                     <span className='input-group-text' id='basic-addon3'>Stamper</span>
                   </div>
                   <span type='text' className='form-control' aria-describedby='basic-addon3'><span className={this.state.hideStamperPulse ? 'hide' : ''}>Pulse...</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div className='row p-1'>
+          <div className='col-4 offset-8'>
+            <div className='input-group mb-3'>
+              <div className='input-group-prepend'>
+                <span className='input-group-text' id='basic-addon3'>Biscuit Counter</span>
+              </div>
+              <input type='text' className='form-control' aria-describedby='basic-addon3' value={this.state.biscuitCounter} disabled />
+            </div>
+            <div className='row'>
+              <div className='col'>
+                <div className='input-group mb-3'>
+                  <div className='input-group-prepend'>
+                    <span className='input-group-text' id='basic-addon3'>Baking</span>
+                  </div>
+                  <input type='text' className='form-control' aria-describedby='basic-addon3' value={this.state.baking} disabled />
+                </div>
+              </div>
+              <div className='col'>
+                <div className='input-group mb-3'>
+                  <div className='input-group-prepend'>
+                    <span className='input-group-text' id='basic-addon3'>Baked</span>
+                  </div>
+                  <input type='text' className='form-control' aria-describedby='basic-addon3' value={this.state.baked} disabled />
                 </div>
               </div>
             </div>
